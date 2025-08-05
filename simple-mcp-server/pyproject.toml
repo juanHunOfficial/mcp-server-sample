@@ -1,9 +1,11 @@
 [project]
-name = "mcp-server-sample"
+name = "simple-mcp-server"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aiohttp>=3.12.15",
     "mcp[cli]>=1.12.3",
+    "rich>=14.1.0",
 ]
