@@ -1,6 +1,7 @@
 import os
 import aiohttp
-from typing import Optional
+import sqlite3
+from typing import Optional, List, Dict
 from datetime import datetime
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -8,8 +9,16 @@ from mcp.server.fastmcp import FastMCP
 
 load_dotenv()
 
+# Get the directory of the current script (backend folder)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct and normalize the path to the database (../data/incidents.db)
+DB_PATH = os.path.normpath(os.path.join(current_dir, '..', 'data', 'incidents.db'))
+
 # Create a FastMCP server instance
 mcp = FastMCP(name="SimpleMCPServer")
+
+# ================================================ SCHEMAS ================================================================================
 
 class StockPriceResponse(BaseModel):
     """Stock price response details."""
@@ -36,6 +45,7 @@ class KnowledgeBaseResponse(BaseModel):
     root_cause: Optional[str] = Field(description="This is a placeholder for the database connection", default=None)
     sys_created_on: Optional[datetime] = Field(description="This is a placeholder for the database connection", default=None)
 
+# ================================================ TOOLS =================================================================================
 
 # Define a simple tool
 @mcp.tool()
@@ -44,11 +54,54 @@ def multiply(a: int, b: int) -> int:
     return a * b
 
 # Define the database retrieval tool that fetches data from a database
-@mcp.tool()
-async def get_knowledge_base_data() -> dict:
-    """Make this a tool to retrieve data from a db"""
-    knowledge_base = {"knowledge": "hello"}
-    return knowledge_base
+@mcp.tool(title="Query KB by ticket_id(s)")
+def get_incidents_by_id(ticket_id: str) -> Optional[Dict]:
+    """
+    Retrieve a specific ticket from the SQLite database by ticket_id.
+    
+    Args:
+        ticket_id (str): The ticket ID to retrieve (e.g., 'KB00001')
+    
+    Returns:
+        Optional[Dict]: Dictionary containing ticket details if found, None otherwise
+    """
+    try:
+        # Connect to the database
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Execute query to fetch ticket by ID
+        query = """
+        SELECT * 
+        FROM incidents 
+        WHERE ticket_id = ?
+        """
+        cursor.execute(query, (ticket_id,))
+        
+        # Fetch the result
+        result = cursor.fetchone()
+        
+        # If ticket is found, convert to dictionary
+        if result:
+            return {
+                'ticket_id': result[0],
+                'short_description': result[1],
+                'description': result[2],
+                'priority': result[3],
+                'close_notes': result[4],
+                'known_solution': result[5],
+                'root_cause': result[6]
+            }
+        
+        return None
+        
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return None
+        
+    finally:
+        if conn:
+            conn.close()
 
 # Define a tool for making an API call to the api-ninja Stock Price API
 @mcp.tool()
@@ -62,7 +115,7 @@ async def get_stock_price_data(ticker: str = "AAPL") -> dict:
             message="API key for stock price service is not set",
             suggested_resolutions=["Set the STOCK_API_KEY environment variable"]
 
-        ).dict()
+        ).model_dump()
 
     url = "https://api.api-ninjas.com/v1/stockprice"
     params = {"ticker": ticker}
@@ -72,7 +125,7 @@ async def get_stock_price_data(ticker: str = "AAPL") -> dict:
         async with session.get(url, headers=headers, params=params) as response:
             if response.status == 200:
                 data = await response.json()
-                return {"status": "success", "result": StockPriceResponse(**data).dict()}
+                return {"status": "success", "result": StockPriceResponse(**data).model_dump()}
             else:
                 return ErrorResponse(
                     status="error",
@@ -83,13 +136,70 @@ async def get_stock_price_data(ticker: str = "AAPL") -> dict:
                         "Verify the API key is correct",
                         "Try again later"
                     ]
-                ).dict()
+                ).model_dump()
+            
+# ================================================ RESOURCES ================================================================================
 
 # Define a simple resource
 @mcp.resource("info://sop")
 def get_sop_document() -> str:
     """Get SOP from a .txt file."""
     return "Welcome to the Simple MCP Server!"
+
+# Define a resource that fetches data from a sqlite db
+@mcp.resource("info://knowledge_base")
+def get_all_tickets() -> Optional[List[Dict]]:
+    """
+    Retrieve all tickets from the SQLite database.
+    
+    Args:
+        None
+    
+    Returns:
+        Optional[List[Dict]]: List of dictionaries containing all ticket details, 
+                            None if an error occurs
+    """
+ 
+    try:
+        # Connect to the database
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Execute query to fetch all tickets
+        query = """
+        SELECT *
+        FROM incidents
+        """
+        cursor.execute(query)
+        
+        # Fetch all results
+        results = cursor.fetchall()
+        
+        # Convert results to list of dictionaries
+        tickets = [
+            {
+                'ticket_id': row[0],
+                'short_description': row[1],
+                'description': row[2],
+                'priority': row[3],
+                'close_notes': row[4],
+                'known_solution': row[5],
+                'root_cause': row[6]
+            }
+            for row in results
+        ]
+        
+        return tickets
+        
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return None
+        
+    finally:
+        if conn:
+            conn.close()
+
+# ================================================ PROMPTS ==================================================================================
 
 # Define a simple prompt
 @mcp.prompt(title="Solutions Expert")
