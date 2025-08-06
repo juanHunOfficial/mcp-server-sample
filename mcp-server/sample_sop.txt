@@ -1,0 +1,79 @@
+Standard Operating Procedure (SOP): Incident Management Using ServiceNow
+
+SOP ID: IT-SNOW-001
+Version: 1.0
+Effective Date: August 06, 2025
+Author: IT Operations Team
+Approver: Jane Doe, IT Manager
+
+1. Purpose
+The purpose of this SOP is to provide a standardized process for managing IT incidents using the ServiceNow platform to ensure timely resolution, consistent communication, and compliance with organizational IT policies.
+
+2. Scope
+This SOP applies to all IT support staff, service desk agents, and incident managers responsible for handling IT incidents reported through ServiceNow. It covers incident logging, prioritization, resolution, and closure. This SOP does not cover change management or problem management processes.
+
+3. Definitions
+- Incident: An unplanned interruption to an IT service or reduction in the quality of an IT service.
+- ServiceNow: A cloud-based platform used for IT service management (ITSM).
+- SLA: Service Level Agreement, defining the expected time for incident resolution.
+- KB: Knowledge Base article within ServiceNow.
+
+4. Roles and Responsibilities
+- Service Desk Agent: Logs incidents, performs initial triage, and escalates as needed.
+- Incident Manager: Oversees incident resolution, coordinates with technical teams, and ensures SLA compliance.
+- Technical Resolver: Resolves incidents based on assigned tasks in ServiceNow.
+- IT Manager: Approves SOP updates and monitors process adherence.
+
+5. Resources and Materials
+- ServiceNow instance (accessible at [company-specific URL, e.g., company.service-now.com])
+- Access to ServiceNow Knowledge Base
+- Incident management training materials (available in company intranet)
+- Computer with internet access and ServiceNow credentials
+
+6. Procedure
+6.1 Incident Logging
+   - Receive incident report via ServiceNow portal, email, or phone.
+   - Log into ServiceNow and navigate to "Create New Incident" under the Incident module.
+   - Enter details: caller name, affected service, description, and impact.
+   - Categorize the incident (e.g., Network, Software, Hardware).
+   - Save the incident to generate a unique Incident ID (e.g., INC0001234).
+
+6.2 Incident Prioritization
+   - Assess urgency and impact using ServiceNow’s priority matrix:
+     - Critical (P1): Major service outage, affects many users.
+     - High (P2): Significant impact, affects a department.
+     - Medium (P3): Moderate impact, affects a small group.
+     - Low (P4): Minor issue, affects an individual.
+   - Assign priority in ServiceNow, which triggers SLA timers.
+
+6.3 Incident Assignment
+   - Assign the incident to the appropriate resolver group in ServiceNow (e.g., Network Team, Application Support).
+   - Notify the assigned group via ServiceNow’s automated notification system.
+   - If no appropriate group is identified, escalate to the Incident Manager.
+
+6.4 Incident Resolution
+   - Resolver group investigates using ServiceNow Knowledge Base for known solutions.
+   - Update the incident work notes in ServiceNow with progress (e.g., “Troubleshooting network connectivity”).
+   - If external action is required (e.g., vendor support), log details in ServiceNow and notify the Incident Manager.
+   - Test resolution to confirm the issue is resolved.
+
+6.5 Incident Closure
+   - Update the incident status to “Resolved” in ServiceNow.
+   - Provide a resolution summary in the incident record.
+   - Notify the caller via ServiceNow’s automated email or portal update.
+   - If the caller confirms resolution, close the incident. If not, reopen and escalate.
+   - Ensure all work notes and resolution details are documented for future reference.
+
+7. Cautions and Warnings
+   - Do not bypass ServiceNow for incident logging; all incidents must be tracked in the platform.
+   - Ensure sensitive data (e.g., passwords) is not included in incident descriptions.
+   - Adhere to SLAs to avoid delays in resolution.
+   - Verify resolution with the caller before closing the incident to prevent rework.
+
+8. References
+   - ServiceNow Incident Management Guide: [company-specific URL or ServiceNow docs]
+   - Company IT Policy: [intranet link]
+   - SLA Definitions: [intranet link]
+
+9. Revision History
+   - Version 1.0, August 06, 2025: Initial draft created by IT Operations Team.
