@@ -186,8 +186,8 @@ def get_knowledge_base() -> str:
 # ================================================ PROMPTS ==================================================================================
 
 # Define a simple prompt
-@mcp.prompt(title="Knowledge Base Query")
-def knowledge_base_query(context: str, supporting_docs: str, knowledge_base: str) -> str:
+@mcp.prompt(title="Solutions Expert")
+def solutions_expert(context: str, supporting_docs: str, knowledge_base: str) -> str:
     """Generate the prompt for a Solutions Expert"""
     return f"""
         # Role

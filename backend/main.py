@@ -1,21 +1,16 @@
-import os
 import json
 import asyncio
 
 from mcp import ClientSession
 from mcp.types import Tool
 from mcp.client.streamable_http import streamablehttp_client
-from fastapi import FastAPI
+from openai import OpenAI
 from pydantic import AnyUrl
 from rich import print_json
-from openai import OpenAI
 from dotenv import load_dotenv
 
 
 load_dotenv()
-
-# Instantiate the backend server
-app = FastAPI(title="Simple AI Agent API")
 
 # Instantiate the AI client
 client = OpenAI()
@@ -52,7 +47,7 @@ async def llm_call(client: OpenAI, prompt: str, tools: list[dict] = None) -> tup
                 {'role': 'user', 'content': prompt}
             ],
             tools=tools,
-            tool_choice='required' # [Options]: 'required', 'auto', and 'none' NOTE: when the tools param contains tools 'auto' is the default, if not then 'none' is the default
+            tool_choice='auto' # [Options]: 'required', 'auto', and 'none' NOTE: when the tools param contains tools 'auto' is the default, if not then 'none' is the default
         )
         return response.choices[0].message.tool_calls
     else:
@@ -90,7 +85,7 @@ async def test(user_prompt: str) -> None:
             # Get the 'Solutions Expert' prompt 
             if prompts.prompts:
                 prompt = await session.get_prompt(
-                    "knowledge_base_query", 
+                    "solutions_expert", 
                     arguments={
                         "context": user_prompt, 
                         "supporting_docs": sample_sop_content_block_text, 
@@ -156,5 +151,5 @@ if __name__ == '__main__':
         "What is the current stock price for TSLA?", # Should retrieve the stock price tool
         "What is 5 * 10?" # Should call the multiply tool
     ]
-
-    asyncio.run(test(user_prompts[0]))
+    # The intent behind the other tools was to showcase the LLM making the decision to use the tool that was best suited for the task given
+    asyncio.run(test(user_prompts[0])) 
