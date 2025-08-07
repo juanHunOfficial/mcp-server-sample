@@ -90,21 +90,21 @@ async def test(user_prompt: str) -> None:
             # Get the 'Solutions Expert' prompt 
             if prompts.prompts:
                 prompt = await session.get_prompt(
-                    "solutions_expert", 
+                    "knowledge_base_query", 
                     arguments={
                         "context": user_prompt, 
                         "supporting_docs": sample_sop_content_block_text, 
                         "knowledge_base" : knowledge_base_content_block_text
                     }
                 )
-                print(f"Prompt result: {prompt.messages[0].content}")
+                prompt = prompt.messages[0].content.text
 
             print("\n\nRetrieved the following tools:\n")
             for tool in tools:
                 print_json(json.dumps(tool))
 
             # Pass that list of tools to the llm and capture the tool choices
-            tool_choices = await llm_call(client, user_prompt, tools)
+            tool_choices = await llm_call(client, prompt, tools)
 
             print(f'\n\nTools chosen:\n')
             for tool in tool_choices:
