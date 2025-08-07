@@ -24,10 +24,7 @@ MCP_SERVER_URL = "http://localhost:8000/mcp" # Testing
 
 
 def format_tools(tools: list[Tool]) -> list[dict]:
-    """Convert a list of MCP tools to an openai format. LLM models have a particular format for how they want to access the tool object.
-    
-        This is OpenAI's format.
-    """
+    """Convert a list of MCP tools to an openai format. LLM models have a particular format for how they want to access the tool object."""
 
     # Format tools information into an openai readable format
     openai_toolkit = [{
@@ -46,16 +43,18 @@ async def llm_call(client: OpenAI, prompt: str, tools: list[dict] = None) -> tup
     """Sends a prompt and tool list to openai and returns the tool choices"""
 
     if tools:
+        # Client Chat Completion with tools
         response = client.chat.completions.create(
             model='gpt-4o',
             messages=[
                 {'role': 'user', 'content': prompt}
             ],
             tools=tools,
-            tool_choice='required' # [Options]: 'required', 'auto', and 'none' NOTE: when the tools param contains tools 'auto' is the default, if not then 'none' is the default
+            tool_choice='required' # [Options]: 'required', 'auto', and 'none'
         )
         return response.choices[0].message.tool_calls
     else:
+        # Client Chat Completion without tools
         response = client.chat.completions.create(
             model='gpt-4o',
             messages=[
@@ -66,6 +65,7 @@ async def llm_call(client: OpenAI, prompt: str, tools: list[dict] = None) -> tup
 
 
 async def test(user_prompt: str) -> None:
+
     # Start an MCP Client Session
     async with streamablehttp_client(MCP_SERVER_URL) as (read, write, _):
         async with ClientSession(read, write) as session:
@@ -73,27 +73,28 @@ async def test(user_prompt: str) -> None:
             # Initialize the session
             await session.initialize()
 
-            # Retrieve the list of tools from the MCP Server
+            # Retrieve the list of tools from the MCP Server, format for OpenAI
             list_tools_result = await session.list_tools()
             tools = format_tools(list_tools_result.tools)
 
-            # Read the knowledge base resource
+            # Read and parse the knowledge base resource
             knowledge_base = await session.read_resource(AnyUrl("info://knowledge_base"))
             knowledge_base_content_block_text = knowledge_base.contents[0].text
-            # Read the sample_sop resource
+
+            # Read and parse the sample_sop resource
             sample_sop = await session.read_resource(AnyUrl("info://sop"))
             sample_sop_content_block_text = sample_sop.contents[0].text
 
             # List available prompts
             prompts = await session.list_prompts()
 
-            # Get the 'Solutions Expert' prompt 
+            # Get and format the 'Solutions Expert' prompt 
             if prompts.prompts:
                 prompt = await session.get_prompt(
                     "solutions_expert", 
                     arguments={
                         "context": user_prompt, 
-                        "supporting_docs": sample_sop_content_block_text, 
+                        "supporting_docs": sample_sop_content_block_text,
                         "knowledge_base" : knowledge_base_content_block_text
                     }
                 )
