@@ -1,0 +1,51 @@
+ticket_id,short_description
+KB00001,Database server crash due to memory overload
+KB00002,Network outage in data center
+KB00003,Login failure on CRM application
+KB00004,Email server delay
+KB00005,Printer failure in office
+KB00006,VPN connection issues
+KB00007,Application crash on finance portal
+KB00008,Server disk space alert
+KB00009,Website downtime
+KB00010,Backup failure
+KB00011,User account lockouts
+KB00012,Database query timeout
+KB00013,Firewall blocking legitimate traffic
+KB00014,Slow application performance
+KB00015,SSL certificate expired
+KB00016,File share access denied
+KB00017,Server reboot unexpectedly
+KB00018,Email phishing detection failure
+KB00019,Inventory system data mismatch
+KB00020,License server down
+KB00021,DNS resolution failure
+KB00022,Patch deployment failure
+KB00023,VOIP call quality issues
+KB00024,Database connection error
+KB00025,User profile corruption
+KB00026,Server high CPU usage
+KB00027,Mobile app crash
+KB00028,Backup storage full
+KB00029,Authentication server timeout
+KB00030,Data sync failure
+KB00031,Server certificate error
+KB00032,File corruption in shared drive
+KB00033,Application timeout during reports
+KB00034,Wi-Fi connectivity issues
+KB00035,Security patch failure
+KB00036,Database replication lag
+KB00037,User interface bug
+KB00038,Printer queue stuck
+KB00039,Server memory leak
+KB00040,Email delivery failure
+KB00041,License expiration warning
+KB00042,Server time sync issue
+KB00043,Application error logs
+KB00044,Network latency
+KB00045,Database index corruption
+KB00046,Login page slow
+KB00047,Backup job timeout
+KB00048,Server certificate mismatch
+KB00049,User profile sync failure
+KB00050,Application crash on startup

@@ -1,33 +1,27 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import List
-from datetime import datetime
+import os
+import json
+import asyncio
+
 from mcp import ClientSession
 from mcp.types import Tool
 from mcp.client.streamable_http import streamablehttp_client
-from openai import AzureOpenAI
-from openai.types.chat import ChatCompletionMessageToolCall
-from openai.types.chat.chat_completion_message_tool_call import Function
-import json
-import os
+from fastapi import FastAPI
+from pydantic import AnyUrl
 from rich import print_json
+from openai import OpenAI
 from dotenv import load_dotenv
-import asyncio
 
-load_dotenv(os.path.join(os.path.dirname(__file__), '..', 'mcp-server', '.env'))
 
+load_dotenv()
 
 # Instantiate the backend server
 app = FastAPI(title="Simple AI Agent API")
 
 # Instantiate the AI client
-client = AzureOpenAI(
-    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-    api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
-)
+client = OpenAI()
 
 MCP_SERVER_URL = "http://localhost:8000/mcp" # Testing
+
 
 def format_tools(tools: list[Tool]) -> list[dict]:
     """Convert a list of MCP tools to an openai format. LLM models have a particular format for how they want to access the tool object.
@@ -47,7 +41,8 @@ def format_tools(tools: list[Tool]) -> list[dict]:
 
     return openai_toolkit
 
-async def llm_call(client: AzureOpenAI, prompt: str, tools: list[dict] = None) -> tuple:
+
+async def llm_call(client: OpenAI, prompt: str, tools: list[dict] = None) -> tuple:
     """Sends a prompt and tool list to openai and returns the tool choices"""
 
     if tools:
@@ -57,7 +52,7 @@ async def llm_call(client: AzureOpenAI, prompt: str, tools: list[dict] = None) -
                 {'role': 'user', 'content': prompt}
             ],
             tools=tools,
-            tool_choice='auto' # [Options]: 'required', 'auto', and 'none' NOTE: when the tools param contains tools 'auto' is the default, if not then 'none' is the default
+            tool_choice='required' # [Options]: 'required', 'auto', and 'none' NOTE: when the tools param contains tools 'auto' is the default, if not then 'none' is the default
         )
         return response.choices[0].message.tool_calls
     else:
@@ -68,6 +63,7 @@ async def llm_call(client: AzureOpenAI, prompt: str, tools: list[dict] = None) -
             ]
         )
         return response.choices[0].message.content
+
 
 async def test(user_prompt: str) -> None:
     # Start an MCP Client Session
@@ -81,6 +77,28 @@ async def test(user_prompt: str) -> None:
             list_tools_result = await session.list_tools()
             tools = format_tools(list_tools_result.tools)
 
+            # Read the knowledge base resource
+            knowledge_base = await session.read_resource(AnyUrl("info://knowledge_base"))
+            knowledge_base_content_block_text = knowledge_base.contents[0].text
+            # Read the sample_sop resource
+            sample_sop = await session.read_resource(AnyUrl("info://sop"))
+            sample_sop_content_block_text = sample_sop.contents[0].text
+
+            # List available prompts
+            prompts = await session.list_prompts()
+
+            # Get the 'Solutions Expert' prompt 
+            if prompts.prompts:
+                prompt = await session.get_prompt(
+                    "solutions_expert", 
+                    arguments={
+                        "context": user_prompt, 
+                        "supporting_docs": sample_sop_content_block_text, 
+                        "knowledge_base" : knowledge_base_content_block_text
+                    }
+                )
+                print(f"Prompt result: {prompt.messages[0].content}")
+
             print("\n\nRetrieved the following tools:\n")
             for tool in tools:
                 print_json(json.dumps(tool))
@@ -93,7 +111,7 @@ async def test(user_prompt: str) -> None:
                 print_json(tool.model_dump_json())
 
             # Initialize a follow up prompt with the original prompt
-            follow_up_prompt = f"User's Prompt:\n\n{user_prompt}\n\nResults of Tool Calls:\n"
+            follow_up_prompt = f"User's Prompt:\n\n{prompt}\n\nResults of Tool Calls:\n"
 
 
             # Call each tool in the tool_choices returned by the LLM
@@ -134,7 +152,7 @@ async def test(user_prompt: str) -> None:
 if __name__ == '__main__':
 
     user_prompts = [
-        "I have a database sever crash, how do i fix it?", # Should retrieve the knowledge base tool
+        "I have a database sever crash, has anyone dealt with this before?", # Should retrieve the knowledge base tool
         "What is the current stock price for TSLA?", # Should retrieve the stock price tool
         "What is 5 * 10?" # Should call the multiply tool
     ]

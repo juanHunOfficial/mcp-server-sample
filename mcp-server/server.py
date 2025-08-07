@@ -1,7 +1,8 @@
 import os
 import aiohttp
 import sqlite3
-from typing import Optional, List, Dict
+import csv
+from typing import Optional, Dict
 from datetime import datetime
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -53,6 +54,7 @@ def multiply(a: int, b: int) -> int:
     """Multiply two numbers."""
     return a * b
 
+
 # Define the database retrieval tool that fetches data from a database
 @mcp.tool(title="Query KB by ticket_id(s)")
 def get_incidents_by_id(ticket_id: str) -> Optional[Dict]:
@@ -60,7 +62,7 @@ def get_incidents_by_id(ticket_id: str) -> Optional[Dict]:
     Retrieve a specific ticket from the SQLite database by ticket_id.
     
     Args:
-        ticket_id (str): The ticket ID to retrieve (e.g., 'KB00001')
+        ticket_id (str): The ticket ID to retrieve (e.g., 'KB00001') which MUST match the knowledge base ticket_id
     
     Returns:
         Optional[Dict]: Dictionary containing ticket details if found, None otherwise
@@ -143,67 +145,49 @@ async def get_stock_price_data(ticker: str = "AAPL") -> dict:
 # Define a simple resource
 @mcp.resource("info://sop")
 def get_sop_document() -> str:
-    """Get SOP from a .txt file."""
-    return "Welcome to the Simple MCP Server!"
-
-# Define a resource that fetches data from a sqlite db
-@mcp.resource("info://knowledge_base")
-def get_all_tickets() -> Optional[List[Dict]]:
     """
-    Retrieve all tickets from the SQLite database.
-    
-    Args:
-        None
+    Read the contents of sample_sop.txt from the data folder.
     
     Returns:
-        Optional[List[Dict]]: List of dictionaries containing all ticket details, 
-                            None if an error occurs
+        Optional[str]: File contents as a string, None if an error occurs
     """
- 
+    file_path = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'sample_sop.txt'))
+    
     try:
-        # Connect to the database
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Execute query to fetch all tickets
-        query = """
-        SELECT *
-        FROM incidents
-        """
-        cursor.execute(query)
-        
-        # Fetch all results
-        results = cursor.fetchall()
-        
-        # Convert results to list of dictionaries
-        tickets = [
-            {
-                'ticket_id': row[0],
-                'short_description': row[1],
-                'description': row[2],
-                'priority': row[3],
-                'close_notes': row[4],
-                'known_solution': row[5],
-                'root_cause': row[6]
-            }
-            for row in results
-        ]
-        
-        return tickets
-        
-    except sqlite3.Error as e:
-        print(f"Database error: {e}")
+        with open(file_path, 'r') as file:
+            return file.read()
+    except FileNotFoundError:
+        print(f"File not found at: {file_path}")
         return None
-        
-    finally:
-        if conn:
-            conn.close()
+    except IOError as e:
+        print(f"Error reading file: {e}")
+        return None
+    
+
+# Define a resource that gets the knowledge base data
+@mcp.resource("info://knowledge_base")
+def get_knowledge_base() -> str:
+    """
+    Read the contents of sample_sop.txt from the data folder.
+    
+    Returns:
+        Optional[str]: File contents as a string, None if an error occurs
+    """
+    file_path = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'short_incidents.csv'))
+    
+    data = []
+    with open(file_path, 'r', newline='') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            data.append(row)
+
+    return data
 
 # ================================================ PROMPTS ==================================================================================
 
 # Define a simple prompt
 @mcp.prompt(title="Solutions Expert")
-def solutions_expert(context: str, supporting_docs: str, knowledge_base: list[dict]) -> str:
+def solutions_expert(context: str, supporting_docs: str, knowledge_base: str) -> str:
     """Generate the prompt for a Solutions Expert"""
     return f"""
         # Role
