@@ -3,7 +3,10 @@ from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("Terraform Demo Advanced")
 
-def parse_tf(path: str):
+# NOTE: the params are the inputSchema
+@mcp.tool()
+def get_env(path: str) -> dict:
+    """Return variables, providers, resources, and outputs from a Terraform file."""
     with open(path, "r") as f:
         data = hcl2.load(f)
 
@@ -22,18 +25,14 @@ def parse_tf(path: str):
 
     # Collect outputs if present
     outputs = [list(d.keys())[0] for d in data.get("output", [])]
-
+    
+    # NOTE: This structure is the outputSchema
     return {
         "variables": variables,
         "providers": providers,
         "resources": resources,
         "outputs": outputs
     }
-
-@mcp.tool()
-def get_env(path: str) -> dict:
-    """Return variables, providers, resources, and outputs from a Terraform file."""
-    return parse_tf(path)
 
 if __name__ == "__main__":
     print("Run with: mcp dev ./terraform_demo_server.py")
