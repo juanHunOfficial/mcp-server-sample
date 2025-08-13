@@ -5,9 +5,14 @@ from mcp import ClientSession
 from mcp.types import Tool
 from mcp.client.streamable_http import streamablehttp_client
 from openai import OpenAI
-from pydantic import AnyUrl
+from pydantic import AnyUrl, BaseModel, Field
 from rich import print_json
 from dotenv import load_dotenv
+from prometheus_client import start_http_server, Summary
+import time
+from fastapi import FastAPI
+from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST
+from fastapi.responses import Response
 
 
 load_dotenv()
@@ -15,7 +20,38 @@ load_dotenv()
 # Instantiate the AI client
 client = OpenAI()
 
+app = FastAPI()
+
 MCP_SERVER_URL = "http://localhost:8000/mcp" # Testing
+
+REQUEST_COUNT = Counter('request_count', 'Total request count')
+
+
+class ChatPayload(BaseModel):
+    """Payload for chat requests."""
+    prompt: str = Field(..., description="The user's prompt to the AI model")
+
+
+@app.post("/chat")
+async def chat(payload: ChatPayload):
+    """Endpoint to handle chat requests."""
+    result = await test(payload.prompt)
+    
+    with open("response.md", "w") as f:
+        f.write(result)
+
+    return {"message": result}
+
+
+@app.get("/metrics")
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+@app.get("/status")
+def status():
+    REQUEST_COUNT.inc()
+    return {"status": "ok"}
 
 
 def format_tools(tools: list[Tool]) -> list[dict]:
@@ -60,7 +96,7 @@ async def llm_call(client: OpenAI, prompt: str, tools: list[dict] = None) -> tup
         return response.choices[0].message.content
 
 
-async def test(user_prompt: str) -> None:
+async def test(user_prompt: str) -> str:
     # Start an MCP Client Session
     async with streamablehttp_client(MCP_SERVER_URL) as (read, write, _):
         async with ClientSession(read, write) as session:
@@ -75,6 +111,7 @@ async def test(user_prompt: str) -> None:
             # Read the knowledge base resource
             knowledge_base = await session.read_resource(AnyUrl("info://knowledge_base"))
             knowledge_base_content_block_text = knowledge_base.contents[0].text
+            
             # Read the sample_sop resource
             sample_sop = await session.read_resource(AnyUrl("info://sop"))
             sample_sop_content_block_text = sample_sop.contents[0].text
@@ -142,14 +179,17 @@ async def test(user_prompt: str) -> None:
 
             print('Mock LLM Final Response:\n')
             print(f"{response}\n")
+            return response
 
 
 if __name__ == '__main__':
 
-    user_prompts = [
-        "I have a database sever crash, has anyone dealt with this before?", # Should retrieve the knowledge base tool
-        "What is the current stock price for TSLA?", # Should retrieve the stock price tool
-        "What is 5 * 10?" # Should call the multiply tool
-    ]
-    # The intent behind the other tools was to showcase the LLM making the decision to use the tool that was best suited for the task given
-    asyncio.run(test(user_prompts[0])) 
+    # user_prompts = [
+    #     "I have a database sever crash, has anyone dealt with this before?", # Should retrieve the knowledge base tool
+    #     "What is the current stock price for TSLA?", # Should retrieve the stock price tool
+    #     "What is 5 * 10?", # Should call the multiply tool
+    #     "What is the current status of the backend service?" # Should call the prometheus metrics tool
+    # ]
+    # # The intent behind the other tools was to showcase the LLM making the decision to use the tool that was best suited for the task given
+    # asyncio.run(test(user_prompts[3])) 
+    pass

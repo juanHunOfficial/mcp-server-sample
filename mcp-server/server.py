@@ -1,12 +1,17 @@
 import os
-import aiohttp
 import sqlite3
 import csv
 from typing import Optional, Dict
 from datetime import datetime
+import json
+
+import aiohttp
+import requests
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
+
 from mcp.server.fastmcp import FastMCP
+
 
 load_dotenv()
 
@@ -17,9 +22,11 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.normpath(os.path.join(current_dir, '..', 'data', 'incidents.db'))
 
 # Create a FastMCP server instance
-mcp = FastMCP(name="SimpleMCPServer")
+mcp = FastMCP(name="SimpleMCPServer", port=8000)
+
 
 # ================================================ SCHEMAS ================================================================================
+
 
 class StockPriceResponse(BaseModel):
     """Stock price response details."""
@@ -29,12 +36,14 @@ class StockPriceResponse(BaseModel):
     exchange: str = Field(description="The market hosting the stock")
     currency: str = Field(description="The currency used to trade this stock")
 
+
 class ErrorResponse(BaseModel):
     """Structured error response for failed API calls."""
     status: str = Field(description="Status of the request", default="error")
     error_code: str = Field(description="Machine-readable error code")
     message: str = Field(description="Human-readable error description")
     suggested_resolutions: list[str] = Field(description="List of suggested actions to resolve the error")
+
 
 class KnowledgeBaseResponse(BaseModel):
     ticket_id: str = Field(description="This is a placeholder for the database connection")
@@ -46,7 +55,9 @@ class KnowledgeBaseResponse(BaseModel):
     root_cause: Optional[str] = Field(description="This is a placeholder for the database connection", default=None)
     sys_created_on: Optional[datetime] = Field(description="This is a placeholder for the database connection", default=None)
 
+
 # ================================================ TOOLS =================================================================================
+
 
 # Define a simple tool
 @mcp.tool()
@@ -105,6 +116,7 @@ def get_incident_by_id(ticket_id: str) -> Optional[Dict]:
         if conn:
             conn.close()
 
+
 # Define a tool for making an API call to the api-ninja Stock Price API
 @mcp.tool()
 async def get_stock_price_data(ticker: str = "AAPL") -> dict:
@@ -139,8 +151,25 @@ async def get_stock_price_data(ticker: str = "AAPL") -> dict:
                         "Try again later"
                     ]
                 ).model_dump()
-            
+
+
+@mcp.tool()
+def get_backend_status() -> str:
+    """Retrieve backend metrics from the prometheus server.
+    
+    Returns:
+        str: Metrics in JSON format
+    """
+    try:
+        response = requests.get("http://localhost:9090/api/v1/query?query=up{job=\"backend\"}")
+        content = json.dumps(response.json(), indent=4)
+        return content
+    except Exception as e:
+        return f"Error retrieving metrics: {str(e)}"
+      
+
 # ================================================ RESOURCES ================================================================================
+
 
 # Define a simple resource
 @mcp.resource("info://sop")
@@ -183,7 +212,9 @@ def get_knowledge_base() -> str:
 
     return data
 
+
 # ================================================ PROMPTS ==================================================================================
+
 
 # Define a simple prompt
 @mcp.prompt(title="Solutions Expert")
