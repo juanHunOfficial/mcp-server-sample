@@ -4,3 +4,6 @@ venv
 .env
 
 .vscode
+prometheus
+__pycache__
+*.pyc
