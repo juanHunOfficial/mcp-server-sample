@@ -83,7 +83,7 @@ async def llm_call(client: OpenAI, prompt: str, tools: list[dict] = None) -> tup
                 {'role': 'user', 'content': prompt}
             ],
             tools=tools,
-            tool_choice='auto' # [Options]: 'required', 'auto', and 'none' NOTE: when the tools param contains tools 'auto' is the default, if not then 'none' is the default
+            tool_choice='required' # [Options]: 'required', 'auto', and 'none' NOTE: when the tools param contains tools 'auto' is the default, if not then 'none' is the default
         )
         return response.choices[0].message.tool_calls
     else:
@@ -109,12 +109,12 @@ async def test(user_prompt: str) -> str:
             tools = format_tools(list_tools_result.tools)
 
             # Read the knowledge base resource
-            knowledge_base = await session.read_resource(AnyUrl("info://knowledge_base"))
-            knowledge_base_content_block_text = knowledge_base.contents[0].text
+            # knowledge_base = await session.read_resource(AnyUrl("info://knowledge_base"))
+            # knowledge_base_content_block_text = knowledge_base.contents[0].text
             
             # Read the sample_sop resource
-            sample_sop = await session.read_resource(AnyUrl("info://sop"))
-            sample_sop_content_block_text = sample_sop.contents[0].text
+            # sample_sop = await session.read_resource(AnyUrl("info://sop"))
+            # sample_sop_content_block_text = sample_sop.contents[0].text
 
             # List available prompts
             prompts = await session.list_prompts()
@@ -125,11 +125,13 @@ async def test(user_prompt: str) -> str:
                     "solutions_expert", 
                     arguments={
                         "context": user_prompt, 
-                        "supporting_docs": sample_sop_content_block_text, 
-                        "knowledge_base" : knowledge_base_content_block_text
+                        "supporting_docs": "sample_sop_content_block_text",
+                        "knowledge_base" : "knowledge_base_content_block_text"
                     }
                 )
                 prompt = prompt.messages[0].content.text
+            else:
+                prompt = user_prompt
 
             print("\n\nRetrieved the following tools:\n")
             for tool in tools:
@@ -184,12 +186,11 @@ async def test(user_prompt: str) -> str:
 
 if __name__ == '__main__':
 
-    # user_prompts = [
-    #     "I have a database sever crash, has anyone dealt with this before?", # Should retrieve the knowledge base tool
-    #     "What is the current stock price for TSLA?", # Should retrieve the stock price tool
-    #     "What is 5 * 10?", # Should call the multiply tool
-    #     "What is the current status of the backend service?" # Should call the prometheus metrics tool
-    # ]
-    # # The intent behind the other tools was to showcase the LLM making the decision to use the tool that was best suited for the task given
-    # asyncio.run(test(user_prompts[3])) 
-    pass
+    user_prompts = [
+        "I have a database sever crash, has anyone dealt with this before?", # Should retrieve the knowledge base tool
+        "What is the current stock price for TSLA?", # Should retrieve the stock price tool
+        "What is 5 * 10?", # Should call the multiply tool
+        "What is the current status of the backend service?" # Should call the prometheus metrics tool
+    ]
+    # The intent behind the other tools was to showcase the LLM making the decision to use the tool that was best suited for the task given
+    asyncio.run(test(user_prompts[3])) 

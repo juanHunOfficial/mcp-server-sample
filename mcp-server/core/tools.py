@@ -10,7 +10,7 @@ import hcl2
 from mcp.server.fastmcp import Context
 
 from constants import DB_PATH
-from schemas import (
+from .schemas import (
     StockPriceResponse,
     ErrorResponse,
     EnvRequest,
@@ -115,7 +115,7 @@ async def get_stock_price_data(ticker: str = "AAPL") -> dict:
 
 @mcp.tool()
 def get_backend_status() -> str:
-    """Retrieve backend metrics from the prometheus server.
+    """Retrieve backend system health from the prometheus server.
     
     Returns:
         str: Metrics in JSON format

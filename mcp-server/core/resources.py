@@ -2,7 +2,7 @@ from server import mcp
 import os
 import csv
 
-from schemas import (
+from .schemas import (
     CodingStandard,
     CodingStandardsResponse,
     Reviewer,

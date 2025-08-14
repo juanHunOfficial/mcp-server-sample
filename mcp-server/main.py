@@ -4,7 +4,7 @@ from core import tools, resources, prompts
 
 def main():
     """Run the MCP server with streamable-http transport."""
-    mcp.run(transport="streamable-http")
+    mcp.run(transport="stdio")
 
 
 if __name__ == "__main__":
