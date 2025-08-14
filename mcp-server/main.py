@@ -1,11 +1,11 @@
+from dotenv import load_dotenv
+
 from server import mcp
 from core import tools, resources, prompts
 
 
-def main():
-    """Run the MCP server with streamable-http transport."""
-    mcp.run(transport="stdio")
-
+# Load environment variables from .env file
+load_dotenv()
 
 if __name__ == "__main__":
-    main()
+    mcp.run(transport="stdio")

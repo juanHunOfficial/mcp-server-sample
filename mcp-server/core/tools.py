@@ -19,13 +19,6 @@ from .schemas import (
 )
 
 
-# Define a simple tool
-@mcp.tool()
-def multiply(a: int, b: int) -> int:
-    """Multiply two numbers."""
-    return a * b
-
-
 # Define the database retrieval tool that fetches data from a database
 @mcp.tool(title="Query KB by ticket_id", description="Call this tool to get a better more information about an incident that will help the user")
 def get_incident_by_id(ticket_id: str) -> Optional[Dict]:
@@ -77,40 +70,40 @@ def get_incident_by_id(ticket_id: str) -> Optional[Dict]:
             conn.close()
 
 
-# Define a tool for making an API call to the api-ninja Stock Price API
-@mcp.tool()
-async def get_stock_price_data(ticker: str = "AAPL") -> dict:
-    """Fetch the current stock price for a given ticker symbol asynchronously."""
-    api_key = os.getenv("STOCK_API_KEY")
-    if not api_key:
-        return ErrorResponse(
-            status="error",
-            error_code="MISSING_API_KEY",
-            message="API key for stock price service is not set",
-            suggested_resolutions=["Set the STOCK_API_KEY environment variable"]
+# # Define a tool for making an API call to the api-ninja Stock Price API
+# @mcp.tool()
+# async def get_stock_price_data(ticker: str = "AAPL") -> dict:
+#     """Fetch the current stock price for a given ticker symbol asynchronously."""
+#     api_key = os.getenv("STOCK_API_KEY")
+#     if not api_key:
+#         return ErrorResponse(
+#             status="error",
+#             error_code="MISSING_API_KEY",
+#             message="API key for stock price service is not set",
+#             suggested_resolutions=["Set the STOCK_API_KEY environment variable"]
 
-        ).model_dump()
+#         ).model_dump()
 
-    url = "https://api.api-ninjas.com/v1/stockprice"
-    params = {"ticker": ticker}
-    headers = {"X-Api-Key": api_key}
+#     url = "https://api.api-ninjas.com/v1/stockprice"
+#     params = {"ticker": ticker}
+#     headers = {"X-Api-Key": api_key}
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers, params=params) as response:
-            if response.status == 200:
-                data = await response.json()
-                return {"status": "success", "result": StockPriceResponse(**data).model_dump()}
-            else:
-                return ErrorResponse(
-                    status="error",
-                    error_code=f"HTTP_{response.status}",
-                    message=f"Failed to fetch stock price: {await response.text()}",
-                    suggested_resolutions=[
-                        "Check if the ticker symbol is valid",
-                        "Verify the API key is correct",
-                        "Try again later"
-                    ]
-                ).model_dump()
+#     async with aiohttp.ClientSession() as session:
+#         async with session.get(url, headers=headers, params=params) as response:
+#             if response.status == 200:
+#                 data = await response.json()
+#                 return {"status": "success", "result": StockPriceResponse(**data).model_dump()}
+#             else:
+#                 return ErrorResponse(
+#                     status="error",
+#                     error_code=f"HTTP_{response.status}",
+#                     message=f"Failed to fetch stock price: {await response.text()}",
+#                     suggested_resolutions=[
+#                         "Check if the ticker symbol is valid",
+#                         "Verify the API key is correct",
+#                         "Try again later"
+#                     ]
+#                 ).model_dump()
 
 
 @mcp.tool()

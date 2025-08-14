@@ -52,6 +52,7 @@ def get_knowledge_base() -> list[str]:
     return data
 
 
+# Switch yto sqlite
 @mcp.resource("reviewers://list")
 def get_code_reviewers() -> ReviewerList:
     reviewers = []
