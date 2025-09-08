@@ -1,0 +1,5 @@
+section,description,link
+Naming Conventions,Use snake_case for functions and variables; PascalCase for classes; constants in UPPER_CASE,https://internal.docs/org/python-naming
+Formatting,Follow PEP 8; max line length 88; use Black for auto-formatting,https://internal.docs/org/python-formatting
+Docstrings,Use Google-style docstrings for all public functions and classes,https://internal.docs/org/python-docstrings
+Security,Avoid eval/exec; validate all inputs; use secrets manager for credentials,https://internal.docs/org/python-security
