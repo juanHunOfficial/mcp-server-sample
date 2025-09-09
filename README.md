@@ -17,7 +17,7 @@ Follow these steps to set up the project on your local machine:
 1. **Clone the Repository**:
    Open a terminal and run the following command to download the project:
    ```bash
-   git clone https://github.com/juanHunOfficial/mcp-server-sample.git
+   git clone https://bitbucket.org/accenture-dev/mcp-server-sample.git
    ```
 
 2. **Navigate to the Project Directory**:
@@ -30,7 +30,9 @@ Follow these steps to set up the project on your local machine:
    Create and activate a virtual environment to manage dependencies:
    ```bash
    python -m venv .venv
-   source .venv/bin/activate  # On Windows, use: .venv\Scripts\activate
+
+   source .venv/bin/activate  # Mac/Linux
+   .venv\Scripts\activate     # Windows
    ```
 
 4. **Install Dependencies**:
@@ -49,16 +51,6 @@ Follow these steps to set up the project on your local machine:
    Add the following lines to the `.env` file, replacing the placeholders with your actual API keys:
    ```bash
    OPENAI_API_KEY=your_openai_api_key_here
-   ```
-
-   Create a `.env` file in the `mcp-server` directory to store your OpenAI API key:
-   ```bash
-   cd mcp-server
-   touch .env
-   ```
-   Add the following lines to the `.env` file, replacing the placeholders with your actual API keys:
-   ```bash
-   STOCK_API_KEY=your_api_ninjas_stock_key_here
    ```
 
 2. **Verify Data Files**:
@@ -135,10 +127,12 @@ The project consists of two components: the MCP server and the backend script. B
 ## Troubleshooting
 - **Error: “Module not found”**:
   Ensure all dependencies are installed (`pip install -r requirements.txt`). Verify the `mcp` library is available; it may be a custom or private package. Contact the repository owner if `mcp` is not found on PyPI.
+  If the error persists, run the following command using the absolute file path to your .venv/bin/python or .venv\Scripts\python:
+  ```bash
+   \absolute\path\to\.venv\Scripts\python -m pip install -r requirements.txt
+  ```
 - **Error: “Connection refused” on `http://localhost:8000/mcp`**:
   Confirm the MCP server is running (`python mcp-server/main.py`) before starting the backend script.
-- **Error: “API key for stock price service is not set”**:
-  Verify the `STOCK_API_KEY` is set in the `.env` file and loaded correctly.
 - **Error: “File not found” for `incidents.db`, `short_incidents.csv`, or `sample_sop.txt`**:
   Ensure the `data` directory contains these files. Create placeholder files if necessary (e.g., `touch data/sample_sop.txt`).
 - **Error: “Invalid API key” for OpenAI**:
